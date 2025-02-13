@@ -4,7 +4,17 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // You can add other Next.js config options here
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['*'],
+    },
+  },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = [...(config.externals || []), '@prisma/client', 'prisma']
+    }
+    return config
+  },
 };
 
 export default nextConfig;
