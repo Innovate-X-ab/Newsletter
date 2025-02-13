@@ -1,0 +1,109 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  name          String?
+  password      String
+  role          Role        @default(USER)
+  posts         Post[]
+  newsletters   Newsletter[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Subscriber {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  name          String?
+  verified      Boolean     @default(false)
+  token         String?     
+  interests     Interest[]
+  subscribed    Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Newsletter {
+  id            String      @id @default(cuid())
+  title         String
+  content       String      @db.Text
+  status        Status      @default(DRAFT)
+  scheduledFor  DateTime?
+  sentAt        DateTime?
+  author        User        @relation(fields: [authorId], references: [id])
+  authorId      String
+  analytics     Analytics?
+  template      Template    @default(DEFAULT)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Post {
+  id            String      @id @default(cuid())
+  title         String
+  slug          String      @unique
+  content       String      @db.Text
+  published     Boolean     @default(false)
+  author        User        @relation(fields: [authorId], references: [id])
+  authorId      String
+  categories    Category[]
+  tags          Tag[]
+  featuredImage String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Analytics {
+  id            String      @id @default(cuid())
+  newsletter    Newsletter  @relation(fields: [newsletterId], references: [id])
+  newsletterId  String      @unique
+  opens         Int         @default(0)
+  clicks        Int         @default(0)
+  bounces       Int         @default(0)
+  unsubscribes  Int         @default(0)
+}
+
+model Category {
+  id            String      @id @default(cuid())
+  name          String      @unique
+  posts         Post[]
+}
+
+model Tag {
+  id            String      @id @default(cuid())
+  name          String      @unique
+  posts         Post[]
+}
+
+model Interest {
+  id            String      @id @default(cuid())
+  name          String      @unique
+  subscribers   Subscriber[]
+}
+
+enum Role {
+  USER
+  ADMIN
+  EDITOR
+}
+
+enum Status {
+  DRAFT
+  SCHEDULED
+  SENT
+  FAILED
+}
+
+enum Template {
+  DEFAULT
+  MINIMAL
+  FEATURED
+}
